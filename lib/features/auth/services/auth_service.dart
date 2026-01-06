@@ -16,7 +16,6 @@ class AuthService {
     required String email,
     required String password,
     required String name,
-    required String phoneNumber,
   }) async {
     try {
       // create user in firebase auth
@@ -44,13 +43,14 @@ class AuthService {
   /// Login
   Future<void> login({required String email, required String password}) async {
     try {
-      // login user
+      // This actually throws if login fails
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
-      throw handleAuthException(e);
+      // Important: rethrow the exception to be caught in UI
+      throw e;
     } catch (e) {
-      throw Exception("An unknown error occured during login");
-    }
+      throw Exception("Something went wrong");
+    } finally {}
   }
 
   /// Log out
