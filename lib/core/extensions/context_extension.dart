@@ -10,4 +10,5 @@ extension ResponsiveUtils on BuildContext {
   double get sp12 => ResponsiveDimensions.spacing12(this);
   double get sp16 => ResponsiveDimensions.spacing16(this);
   double get sp20 => ResponsiveDimensions.spacing20(this);
+  double get sp48 => ResponsiveDimensions.spacing48(this);
 }

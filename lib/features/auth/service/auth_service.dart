@@ -32,7 +32,7 @@ class AuthService {
 
         // reload to reflect the change
         await user.reload();
-      }
+      } // Set displayName
     } on FirebaseAuthException catch (e) {
       throw handleAuthException(e);
     } catch (e) {
@@ -43,14 +43,13 @@ class AuthService {
   /// Login
   Future<void> login({required String email, required String password}) async {
     try {
-      // This actually throws if login fails
+      // login user
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
-      // Important: rethrow the exception to be caught in UI
-      throw e;
+      throw handleAuthException(e);
     } catch (e) {
-      throw Exception("Something went wrong");
-    } finally {}
+      throw Exception("An unknown error occured during login");
+    }
   }
 
   /// Log out

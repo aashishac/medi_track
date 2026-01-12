@@ -36,6 +36,9 @@ class ResponsiveDimensions {
   static double spacing20(BuildContext context, {double size = 20}) =>
       getResponsiveSize(context, size: size);
 
+  static double spacing48(BuildContext context) =>
+      getResponsiveSize(context, size: 48);
+
   // =================== padding =====================
   static EdgeInsets paddingAll4(BuildContext context) =>
       EdgeInsets.all(spacing4(context));

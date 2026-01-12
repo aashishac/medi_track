@@ -1,12 +1,14 @@
 class AppStrings {
+  AppStrings._();
   // Auth
   static const String welcomeBack = "Welcome Back";
   static const String signInSubtitle = "Sign in to manage healthcare data";
   static const String createAccount = "Create Account";
   static const String signUpSubtitle =
-      "Join MedCore to manage your practice securely and efficiently.";
+      "Join MediTrack to manage your practice securely and efficiently.";
   static const String loginBtn = "Login";
   static const String signUpBtn = "Sign Up";
+  static const String continueBtn = "Continue";
   static const String forgotPassword = "Forgot Password?";
   static const String dontHaveAccount = "Don't have an account?";
   static const String alreadyHaveAccount = "Already have an account?";
@@ -14,8 +16,12 @@ class AppStrings {
   // Inputs
   static const String emailLabel = "Email";
   static const String emailHint = "enter your email";
+  static const String phoneHint = "enter your phone number";
   static const String passwordLabel = "Password";
+  static const String confirmPassLabel = "Confirm Password";
+  static const String confirmPassHint = "Retype Password";
   static const String passwordHint = "enter your password";
+  static const String nameHint = "enter your full name";
   static const String fullNameLabel = "Full Name";
   static const String phoneLabel = "Phone Number";
 
@@ -42,4 +48,12 @@ class AppStrings {
   static const String securitySection = "SECURITY";
   static const String legalSection = "LEGAL & ABOUT";
   static const String logOut = "Log Out";
+
+  // success message
+  static const String loginSuccess = "Successfully logged in";
+  static const String registerSuccess = "Successfully created your account";
+
+  // collections
+  static const String patients = "patients";
+  static const String doctors = "doctors";
 }

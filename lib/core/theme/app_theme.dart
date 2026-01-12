@@ -11,7 +11,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       primaryColor: AppColors.primaryBlue,
-      scaffoldBackgroundColor: AppColors.surfaceWhite,
+      scaffoldBackgroundColor: AppColors.background,
 
       // Color Scheme
       colorScheme: const ColorScheme.light(
@@ -27,7 +27,7 @@ class AppTheme {
 
       // AppBar Theme
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: AppColors.textPrimary),

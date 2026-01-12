@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:meditrack/features/auth/services/auth_service.dart';
+import 'package:meditrack/features/auth/service/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final _authService = AuthService();
@@ -11,6 +11,10 @@ class AuthProvider with ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  // store signed-in user's name
+  String? _userName;
+  String? get userName => _userName;
 
   // helper to toggle loading state
   void _setLoading(bool value) {
@@ -37,45 +41,25 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     try {
       await _authService.signUp(email: email, password: password, name: name);
+      _userName = name; // Set displayName in FirebaseAuth
+      // save name locally
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
     } finally {
-      // always stop loading , whether success or failure
       _setLoading(false);
     }
   }
 
   // login
   Future<void> login({required String email, required String password}) async {
+    _setLoading(true);
     try {
-      _isLoading = true;
-      notifyListeners();
-      _setLoading(true);
       await _authService.login(email: email, password: password);
-    } on FirebaseAuthException catch (e) {
-      // Map FirebaseAuth codes to friendly messages
-      String message;
-      switch (e.code) {
-        case 'user-not-found':
-          message = "No user found with this email";
-          break;
-        case 'wrong-password':
-          message = "Incorrect email or password";
-          break;
-        case 'invalid-email':
-          message = "Invalid email format";
-          break;
-        case 'user-disabled':
-          message = "This account has been disabled";
-          break;
-        default:
-          message = "Login failed. Please try again";
-      }
-      throw Exception(message); // Throw friendly message
-    } catch (_) {
-      throw Exception("Something went wrong");
+      // optionally fetch user profile from Firestore here
+    } catch (e) {
+      _setError(e.toString());
     } finally {
-      _isLoading = false;
       _setLoading(false);
     }
   }
@@ -84,7 +68,9 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _setLoading(true);
     await _authService.logout();
+    _userName = null; // clear name on logout
     _setLoading(false);
+    notifyListeners();
   }
 
   // forgot password
@@ -95,7 +81,6 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _setError(e.toString());
     } finally {
-      // always stop loading , whether success or failure
       _setLoading(false);
     }
   }
