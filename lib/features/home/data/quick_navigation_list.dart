@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:meditrack/core/constants/app_colors.dart';
 import 'package:meditrack/features/home/models/quick_action.dart';
 import 'package:meditrack/features/patient/presentation/pages/patient_record_list_page.dart';
+import 'package:meditrack/features/profile/presentation/pages/profile_page.dart';
+import 'package:meditrack/features/profile/presentation/pages/settings_page.dart';
 
 final quickNavigationList = [
   QuickAction(
@@ -34,10 +36,10 @@ final quickNavigationList = [
     title: "My Profile",
     subtitle: "Update details",
     onTap: (context) {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => PatientRecordListPage()),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
     },
   ),
 
@@ -48,10 +50,10 @@ final quickNavigationList = [
     title: "Settings",
     subtitle: "System prefs",
     onTap: (context) {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => PatientRecordListPage()),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SettingsPage()),
+      );
     },
   ),
 ];

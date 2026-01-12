@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meditrack/core/utils/helper_function.dart';
+import 'package:meditrack/features/home/models/doctor.dart';
 
 class AuthService {
   // Create an instance of firebase auth
@@ -10,6 +12,11 @@ class AuthService {
 
   // Login status checker
   bool get isLoggedIn => _auth.currentUser != null;
+
+  String? get currentUserName => _auth.currentUser?.displayName;
+  String? get currentUserEmail => _auth.currentUser?.email;
+  String? get currentUserPhone => _auth.currentUser?.phoneNumber;
+  String? get currentUserId => _auth.currentUser?.uid;
 
   /// Sign Up (Create Account)
   Future<void> signUp({
@@ -64,5 +71,17 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw handleAuthException(e);
     }
+  }
+}
+
+class DoctorService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<Doctor?> getDoctorById(String doctorId) async {
+    final doc = await _firestore.collection('doctors').doc(doctorId).get();
+
+    if (!doc.exists || doc.data() == null) return null;
+
+    return Doctor.fromJson(doc.data()!);
   }
 }

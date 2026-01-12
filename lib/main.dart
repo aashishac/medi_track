@@ -22,6 +22,9 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => UserProvider()..fetchDoctorData(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..loadProfileImage(),
+        ),
       ],
       child: const MyApp(),
     ),

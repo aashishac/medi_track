@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meditrack/core/constants/app_colors.dart';
@@ -8,6 +10,7 @@ import 'package:meditrack/features/auth/presentation/providers/auth_provider.dar
 import 'package:meditrack/features/home/presentation/widgets/heading_label.dart';
 import 'package:meditrack/features/home/presentation/widgets/overview_card.dart';
 import 'package:meditrack/features/home/presentation/widgets/quick_grid_list.dart';
+import 'package:meditrack/features/profile/presentation/pages/profile_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -15,17 +18,9 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imagePath = context.watch<AuthProvider>().profileImagePath;
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await context.read<AuthProvider>().logout();
-            },
-            icon: Icon(Icons.logout),
-          ),
-        ],
-      ),
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -54,9 +49,7 @@ class HomePage extends StatelessWidget {
                             children: [
                               TextSpan(
                                 text:
-                                    context.watch<AuthProvider>().userName ??
-                                    "Guest",
-
+                                    "Dr. ${context.watch<AuthProvider>().userName ?? "Guest"}",
                                 style: AppTextStyle.bodySemiBold(
                                   context,
                                   color: AppColors.primaryBlue,
@@ -69,12 +62,20 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
                     // profile image
-                    Container(
-                      width: context.sp48,
-                      height: context.sp48,
-                      decoration: BoxDecoration(
-                        shape: .circle,
-                        color: AppColors.divider,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProfilePage(),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 32,
+                        backgroundImage: imagePath != null
+                            ? FileImage(File(imagePath))
+                            : const AssetImage("assets/profileimg.png"),
                       ),
                     ),
                   ],
