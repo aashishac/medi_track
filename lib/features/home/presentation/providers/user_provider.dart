@@ -1,53 +1,56 @@
-import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meditrack/features/home/models/doctor.dart';
 import 'package:meditrack/features/home/services/firestore_db.dart';
 
 class UserProvider with ChangeNotifier {
-  final db = FirestoreDb();
-  final auth = FirebaseAuth.instance;
-  Doctor? _doctor;
-  String? _errorMessage;
+  final FirestoreDb _db;
+  final FirebaseAuth _auth;
 
+  UserProvider({FirestoreDb? db, FirebaseAuth? auth})
+    : _db = db ?? FirestoreDb(),
+      _auth = auth ?? FirebaseAuth.instance; // use injected auth
+
+  Doctor? _doctor;
   bool _isLoading = false;
+  String? _error;
 
   Doctor? get doctor => _doctor;
   bool get isLoading => _isLoading;
-  String? get error => _errorMessage;
+  String? get error => _error;
 
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
+  // Example: method that uses auth
+  String? get currentUid => _auth.currentUser?.uid;
 
-  // add doctor data
   Future<void> completeDoctorProfile(Doctor doctor) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      _errorMessage = null;
-      _setLoading(true);
-      await db.saveDoctorProfile(doctor);
+      await _db.saveDoctorProfile(doctor);
+      _doctor = doctor;
     } catch (e) {
-      _errorMessage = e.toString();
-      log("Failed to add doctor data: $e");
+      _error = e.toString();
     } finally {
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  // add doctor data
   Future<void> fetchDoctorData() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      _errorMessage = null;
-      _setLoading(true);
-      _doctor = await db.fetchDoctorData();
+      final fetchedDoctor = await _db.fetchDoctorData();
+      _doctor = fetchedDoctor;
     } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      log("Failed to fetch doctor data: $e");
+      _error = e.toString();
     } finally {
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

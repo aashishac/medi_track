@@ -20,7 +20,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final imagePath = context.watch<AuthProvider>().profileImagePath;
     return Scaffold(
-      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

@@ -27,11 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return HomePage();
-                },
-              ),
+              MaterialPageRoute(builder: (context) => HomePage()),
             );
           },
           child: Icon(Icons.arrow_back),

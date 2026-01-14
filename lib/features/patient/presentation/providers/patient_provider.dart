@@ -8,8 +8,8 @@ import 'package:meditrack/features/home/services/firestore_db.dart';
 enum FilterCategory { all, apointments, male, female }
 
 class PatientProvider with ChangeNotifier {
-  final _db = FirestoreDb();
-
+  final FirestoreDb _db;
+  PatientProvider({FirestoreDb? db}) : _db = db ?? FirestoreDb();
   // internal list
   List<Patient> _allPatients = [];
   List<Patient> _filteredPatients = [];
