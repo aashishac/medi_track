@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:meditrack/core/responsive/responsive_helper.dart';
 
 class ResponsiveDimensions {
   ResponsiveDimensions._();
   // base reference width
-  static final _baseWidth = 360;
+  static final double _baseMobileWidth = 360;
+  static final double _baseTabletWidth = 768;
 
   /// get scale factor based on screen width
   static double getScaleFactor(BuildContext context) {
     double screenWidth = MediaQuery.widthOf(context);
-    double scaleFactor = screenWidth / _baseWidth;
-    return scaleFactor.clamp(0.85, 1.15);
+    double baseWidth = ResponsiveHelper.isMobile(context)
+        ? _baseMobileWidth
+        : _baseTabletWidth;
+    double scaleFactor = screenWidth / baseWidth;
+
+    // Different clamp ranges for different devices
+    if (ResponsiveHelper.isMobile(context)) {
+      return scaleFactor.clamp(0.85, 1.15);
+    } else {
+      return scaleFactor.clamp(0.9, 1.3);
+    }
   }
 
   /// get responsive size for any dimension (padding, margin, width, height etc)
@@ -18,6 +29,23 @@ class ResponsiveDimensions {
     required double size,
   }) {
     return size * getScaleFactor(context);
+  }
+
+  /// Get responsive size based on screen width percentage
+  static double getAdaptiveSize(
+    BuildContext context, {
+    required double percentage,
+  }) {
+    return MediaQuery.widthOf(context) * (percentage / 100);
+  }
+
+  /// Get device specific size
+  static double getDeviceSpecificSize(
+    BuildContext context, {
+    required double mobile,
+    required double tablet,
+  }) {
+    return ResponsiveHelper.isMobile(context) ? mobile : tablet;
   }
 
   // spacing
@@ -71,6 +99,27 @@ class ResponsiveDimensions {
     return EdgeInsets.symmetric(
       vertical: getResponsiveSize(context, size: vertical),
       horizontal: getResponsiveSize(context, size: horizontal),
+    );
+  }
+
+  static EdgeInsets paddingSymmetricAdaptive(
+    BuildContext context, {
+    double mobileHorizontal = 0,
+    double tabletHorizontal = 0,
+    double mobileVertical = 0,
+    double tabletVertical = 0,
+  }) {
+    return EdgeInsets.symmetric(
+      horizontal: getDeviceSpecificSize(
+        context,
+        mobile: mobileHorizontal,
+        tablet: tabletHorizontal,
+      ),
+      vertical: getDeviceSpecificSize(
+        context,
+        mobile: mobileVertical,
+        tablet: tabletVertical,
+      ),
     );
   }
 
