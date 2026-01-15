@@ -1,9 +1,12 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:meditrack/features/auth/presentation/pages/login_page.dart';
 import 'package:meditrack/features/auth/presentation/providers/auth_provider.dart';
+import 'package:meditrack/core/responsive/responsive_helper.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,51 +17,85 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   Future<void> _pickImage(BuildContext context) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-    );
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      context.read<AuthProvider>().setProfileImage(image.path);
+    if (image == null) return;
+
+    if (kIsWeb) {
+      final bytes = await image.readAsBytes();
+      context.read<AuthProvider>().setProfileImage(bytes: bytes);
+    } else {
+      context.read<AuthProvider>().setProfileImage(path: image.path);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
+    final maxWidth = ResponsiveHelper.getResponsiveValue<double>(
+      context: context,
+      mobile: double.infinity,
+      tablet: 720,
+    );
+
+    final horizontalPadding = ResponsiveHelper.getResponsiveValue<double>(
+      context: context,
+      mobile: 20,
+      tablet: 48,
+    );
+
+    final sectionSpacing = ResponsiveHelper.getResponsiveValue<double>(
+      context: context,
+      mobile: 20,
+      tablet: 28,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FB),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        centerTitle: true,
         title: const Text(
           "My Profile",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
-        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _profileHeader(context),
-            const SizedBox(height: 24),
-            _contactInfoCard(context),
-            const SizedBox(height: 24),
-            _accountSettingsCard(),
-            const SizedBox(height: 24),
-            _logoutButton(context),
-            const SizedBox(height: 16),
-            const Text(
-              "Version 2.4.0 (Build 302)",
-              style: TextStyle(color: Colors.grey),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 16,
             ),
-          ],
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Column(
+                  children: [
+                    _profileHeader(context),
+                    SizedBox(height: sectionSpacing),
+                    _contactInfoCard(context),
+                    SizedBox(height: sectionSpacing),
+                    _accountSettingsCard(),
+                    SizedBox(height: sectionSpacing),
+                    _logoutButton(context),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Version 2.4.0 (Build 302)",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -66,46 +103,64 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // ---------------- PROFILE HEADER ----------------
   Widget _profileHeader(BuildContext context) {
-    final imagePath = context.watch<AuthProvider>().profileImagePath;
+    final auth = context.watch<AuthProvider>();
+
     return Column(
       children: [
         Stack(
           children: [
             CircleAvatar(
-              radius: 60,
-              backgroundImage: imagePath != null
-                  ? FileImage(File(imagePath))
-                  : const AssetImage("assets/profileimg.png"),
+              radius: 40,
+              backgroundImage: kIsWeb
+                  ? (auth.profileImageBytes != null
+                        ? MemoryImage(auth.profileImageBytes!)
+                        : const AssetImage('assets/profileimg.png'))
+                  : (auth.profileImagePath != null
+                            ? FileImage(File(auth.profileImagePath!))
+                            : const AssetImage('assets/profileimg.png'))
+                        as ImageProvider,
             ),
+
             Positioned(
-              bottom: 0,
-              right: 4,
+              bottom: 2,
+              right: 2,
               child: GestureDetector(
                 onTap: () => _pickImage(context),
-                child: const CircleAvatar(
-                  radius: 18,
+                child: CircleAvatar(
+                  radius: ResponsiveHelper.getResponsiveValue(
+                    context: context,
+                    mobile: 16,
+                    tablet: 18,
+                  ),
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.camera_alt, size: 18, color: Colors.blue),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 16,
+                    color: Colors.blue,
+                  ),
                 ),
               ),
             ),
           ],
         ),
-
         const SizedBox(height: 16),
         Text(
-          "Dr. ${context.watch<AuthProvider>().userName ?? "Guest"}",
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          "Dr. ${auth.userName ?? "Guest"}",
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveValue(
+              context: context,
+              mobile: 20,
+              tablet: 22,
+            ),
+            fontWeight: FontWeight.bold,
+          ),
         ),
-
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _roleChip(
-              label:
-                  context.watch<AuthProvider>().doctor?.department ??
-                  "Not assigned",
+              label: auth.doctor?.department ?? "Not assigned",
               color: Colors.blue.shade50,
               textColor: Colors.blue,
             ),
@@ -133,8 +188,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ---------------- CONTACT INFO CARD ----------------
+  // ---------------- CONTACT INFO ----------------
   Widget _contactInfoCard(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return _sectionCard(
       title: "CONTACT INFORMATION",
       icon: Icons.badge,
@@ -143,22 +200,19 @@ class _ProfilePageState extends State<ProfilePage> {
           icon: Icons.email,
           iconColor: Colors.blue,
           label: "Email Address",
-          value: context.watch<AuthProvider>().userEmail ?? "Not available",
+          value: auth.userEmail ?? "Not available",
         ),
-
         _InfoTile(
           icon: Icons.phone,
           iconColor: Colors.green,
           label: "Phone Number",
-          value: context.watch<AuthProvider>().doctor?.phone ?? "Not available",
+          value: auth.doctor?.phone ?? "Not available",
         ),
-
         _InfoTile(
           icon: Icons.perm_identity,
           iconColor: Colors.purple,
           label: "Employee ID",
-          value:
-              context.watch<AuthProvider>().doctor?.doctorId ?? "Not available",
+          value: auth.doctor?.doctorId ?? "Not available",
         ),
       ],
     );
@@ -175,7 +229,6 @@ class _ProfilePageState extends State<ProfilePage> {
           title: "Edit Profile Details",
           onTap: () {},
         ),
-
         _SettingsTile(
           icon: Icons.lock_outline,
           title: "Change Password",
@@ -185,7 +238,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ---------------- LOGOUT BUTTON ----------------
+  // ---------------- LOGOUT ----------------
   Widget _logoutButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -213,8 +266,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     context.read<AuthProvider>().logout();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    ); // close dialog
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
                   },
                   child: const Text(
                     "Log Out",

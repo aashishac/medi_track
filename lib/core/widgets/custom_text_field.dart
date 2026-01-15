@@ -14,6 +14,8 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.style,
     this.contentPadding,
+    int? fontSize,
+    int? height,
   });
 
   /// [TextEditingController] controller

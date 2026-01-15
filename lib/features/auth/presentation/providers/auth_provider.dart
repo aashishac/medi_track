@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meditrack/features/auth/service/auth_service.dart';
 import 'package:meditrack/features/home/models/doctor.dart';
@@ -27,8 +31,11 @@ class AuthProvider with ChangeNotifier {
   String? get userPhone => _userPhone;
   String? get userId => _userId;
   Doctor? get doctor => _doctor;
-  String? _profileImagePath;
+  String? _profileImagePath; // Mobile
+  Uint8List? _profileImageBytes; // Web
+
   String? get profileImagePath => _profileImagePath;
+  Uint8List? get profileImageBytes => _profileImageBytes;
 
   /// Load  data from FirebaseAuth
   void loadUser() {
@@ -76,16 +83,30 @@ class AuthProvider with ChangeNotifier {
   /// Load image when app starts
   Future<void> loadProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
-    _profileImagePath = prefs.getString('profile_image');
+
+    if (kIsWeb) {
+      final base64Image = prefs.getString('profile_image_web');
+      if (base64Image != null) {
+        _profileImageBytes = base64Decode(base64Image);
+      }
+    } else {
+      _profileImagePath = prefs.getString('profile_image_mobile');
+    }
+
     notifyListeners();
   }
 
   /// Save image after picking
-  Future<void> setProfileImage(String path) async {
-    _profileImagePath = path;
-
+  Future<void> setProfileImage({String? path, Uint8List? bytes}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_image', path);
+
+    if (kIsWeb && bytes != null) {
+      _profileImageBytes = bytes;
+      await prefs.setString('profile_image_web', base64Encode(bytes));
+    } else if (!kIsWeb && path != null) {
+      _profileImagePath = path;
+      await prefs.setString('profile_image_mobile', path);
+    }
 
     notifyListeners();
   }
