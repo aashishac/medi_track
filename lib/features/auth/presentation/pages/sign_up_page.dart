@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meditrack/core/constants/app_strings.dart';
 import 'package:meditrack/core/extensions/context_extension.dart';
-import 'package:meditrack/core/responsive/responsive_dimensions.dart';
+import 'package:meditrack/core/responsive/responsive_helper.dart';
 import 'package:meditrack/core/utils/snack_bar_helper.dart';
 import 'package:meditrack/core/validators/form_validator.dart';
 import 'package:meditrack/core/widgets/custom_button.dart';
@@ -58,125 +58,112 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: Padding(
-          padding: ResponsiveDimensions.paddingSymmetric(
-            context,
-            horizontal: 24,
+    final isTablet = ResponsiveHelper.isTablet(context);
+
+    final content = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: isTablet ? context.sp20 : context.sp16,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? context.sp12 : context.sp8,
+            ),
+            child: WelcomeMessage(
+              title: AppStrings.createAccount,
+              subtitle: AppStrings.signUpSubtitle,
+            ),
           ),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: .start,
-                spacing: context.sp16,
-                mainAxisAlignment: .center,
-                children: [
-                  // welcome
-                  Padding(
-                    padding: ResponsiveDimensions.paddingSymmetric(
-                      context,
-                      horizontal: 18,
-                    ),
-                    child: WelcomeMessage(
-                      title: AppStrings.createAccount,
-                      subtitle: AppStrings.signUpSubtitle,
-                    ),
-                  ),
 
-                  // name input
-                  CustomLabelTextField(
-                    labelText: AppStrings.fullNameLabel,
-                    customTextField: CustomTextField(
-                      controller: _nameController,
-                      prefixIcon: Icon(Icons.person, size: context.sp16),
-                      hintText: AppStrings.nameHint,
-                      validator: (value) =>
-                          FormValidators.validateUsername(value),
-                    ),
-                  ),
+          CustomLabelTextField(
+            labelText: AppStrings.fullNameLabel,
+            customTextField: CustomTextField(
+              controller: _nameController,
+              prefixIcon: Icon(Icons.person, size: 18),
+              hintText: AppStrings.nameHint,
+              validator: (value) => FormValidators.validateUsername(value),
+            ),
+          ),
 
-                  // email input
-                  CustomLabelTextField(
-                    labelText: AppStrings.emailLabel,
-                    customTextField: CustomTextField(
-                      controller: _emailController,
-                      keyboardType: .emailAddress,
-                      prefixIcon: Icon(Icons.email, size: context.sp16),
-                      hintText: AppStrings.emailHint,
-                      validator: (value) => FormValidators.validateEmail(value),
-                    ),
-                  ),
+          CustomLabelTextField(
+            labelText: AppStrings.emailLabel,
+            customTextField: CustomTextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icon(Icons.email, size: 18),
+              hintText: AppStrings.emailHint,
+              validator: (value) => FormValidators.validateEmail(value),
+            ),
+          ),
 
-                  // password input
-                  CustomLabelTextField(
-                    labelText: AppStrings.passwordLabel,
-                    customTextField: CustomTextField(
-                      controller: _passwordController,
-                      keyboardType: .visiblePassword,
-                      prefixIcon: IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.visibility, size: context.sp16),
-                      ),
-                      suffixIcon: Icon(Icons.visibility, size: context.sp16),
-                      hintText: AppStrings.passwordHint,
-                      validator: (value) =>
-                          FormValidators.validatePassword(value),
-                    ),
-                  ),
+          CustomLabelTextField(
+            labelText: AppStrings.passwordLabel,
+            customTextField: CustomTextField(
+              controller: _passwordController,
+              keyboardType: TextInputType.visiblePassword,
+              prefixIcon: Icon(Icons.lock, size: 18),
+              suffixIcon: Icon(Icons.visibility, size: 18),
+              hintText: AppStrings.passwordHint,
+              validator: (value) => FormValidators.validatePassword(value),
+            ),
+          ),
 
-                  //confirm password input
-                  CustomLabelTextField(
-                    labelText: AppStrings.confirmPassLabel,
-                    customTextField: CustomTextField(
-                      controller: _cofirmPassController,
-                      keyboardType: .visiblePassword,
-                      suffixIcon: IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.visibility, size: context.sp16),
-                      ),
-                      prefixIcon: Icon(Icons.lock, size: context.sp16),
-                      hintText: AppStrings.confirmPassHint,
-                      validator: (value) =>
-                          FormValidators.validateConfirmPassword(
-                            value,
-                            _passwordController.text.trim(),
-                          ),
-                    ),
-                  ),
-
-                  // terms and policy section
-                  CheckboxSection(value: false, onChanged: (value) {}),
-
-                  SizedBox(height: context.sp4),
-
-                  // sign up button
-                  Selector<AuthProvider, bool>(
-                    selector: (_, value) => value.isLoading,
-                    builder: (context, value, child) => CustomButton(
-                      onTap: () {
-                        createAccount();
-                      },
-                      buttonLabel: AppStrings.createAccount,
-                      isLoading: value,
-                    ),
-                  ),
-
-                  // redirect section
-                  RedirectSection(
-                    infoText: AppStrings.alreadyHaveAccount,
-                    redirectLinkText: AppStrings.loginBtn,
-                    navigateTo: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  SizedBox(height: context.sp20),
-                ],
+          CustomLabelTextField(
+            labelText: AppStrings.confirmPassLabel,
+            customTextField: CustomTextField(
+              controller: _cofirmPassController,
+              keyboardType: TextInputType.visiblePassword,
+              prefixIcon: Icon(Icons.lock_outline, size: 18),
+              suffixIcon: Icon(Icons.visibility, size: 18),
+              hintText: AppStrings.confirmPassHint,
+              validator: (value) => FormValidators.validateConfirmPassword(
+                value,
+                _passwordController.text.trim(),
               ),
             ),
           ),
+
+          CheckboxSection(value: false, onChanged: (_) {}),
+
+          Selector<AuthProvider, bool>(
+            selector: (_, p) => p.isLoading,
+            builder: (_, loading, __) => CustomButton(
+              onTap: createAccount,
+              buttonLabel: AppStrings.createAccount,
+              isLoading: loading,
+            ),
+          ),
+
+          RedirectSection(
+            infoText: AppStrings.alreadyHaveAccount,
+            redirectLinkText: AppStrings.loginBtn,
+            navigateTo: () => Navigator.pop(context),
+          ),
+
+          SizedBox(height: context.sp20),
+        ],
+      ),
+    );
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 32 : 16,
+            vertical: isTablet ? 24 : 16,
+          ),
+          child: isTablet
+              ? Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: content,
+                  ),
+                )
+              : content,
         ),
       ),
     );
