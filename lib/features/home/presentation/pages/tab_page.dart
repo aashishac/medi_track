@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meditrack/core/constants/app_colors.dart';
 import 'package:meditrack/features/home/presentation/pages/add_patient_record_page.dart';
 import 'package:meditrack/features/home/presentation/pages/home_page.dart';
+import 'package:meditrack/features/notification/presentation/page/notification_page.dart';
 import 'package:meditrack/features/patient/presentation/pages/patient_record_list_page.dart';
 
 class TabPage extends StatefulWidget {
@@ -17,7 +18,7 @@ class _TabPageState extends State<TabPage> {
   final List<Widget> screens = [
     HomePage(),
     PatientRecordListPage(),
-    Center(child: Text("Setting Page")),
+    NotificationPage(),
     Center(child: Text("Menu Page")),
   ];
   @override

@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:meditrack/features/auth/service/auth_service.dart';
 import 'package:meditrack/features/home/models/doctor.dart';
 import 'package:shared_preferences/shared_preferences.dart';

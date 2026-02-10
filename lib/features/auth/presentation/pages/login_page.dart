@@ -11,6 +11,7 @@ import 'package:meditrack/core/validators/form_validator.dart';
 import 'package:meditrack/core/widgets/custom_button.dart';
 import 'package:meditrack/core/widgets/custom_label_text_field.dart';
 import 'package:meditrack/core/widgets/custom_text_field.dart';
+import 'package:meditrack/features/admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:meditrack/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:meditrack/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:meditrack/features/auth/presentation/providers/auth_provider.dart';
@@ -18,7 +19,8 @@ import 'package:meditrack/features/auth/presentation/providers/password_toggle_p
 import 'package:meditrack/features/auth/presentation/widgets/bottom_info_section.dart';
 import 'package:meditrack/features/auth/presentation/widgets/redirect_section.dart';
 import 'package:meditrack/features/auth/presentation/widgets/welcome_message.dart';
-import 'package:meditrack/features/home/presentation/pages/tab_page.dart';
+import 'package:meditrack/features/home/presentation/pages/home_page.dart';
+
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -32,40 +34,72 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // variable to keep track of the previous state for comparison
-  late bool _laskKnownConnectionState;
+  // Track last known connection state
+  late bool _lastKnownConnectionState;
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ConnectivityProvider>();
-      _laskKnownConnectionState = provider.isConnected;
-
-      provider.addListener(_connectionListner);
+      _lastKnownConnectionState = provider.isConnected;
+      provider.addListener(_connectionListener);
     });
   }
 
-  // this function runs every time the provider calls notifylistener
-  void _connectionListner() {
+  void _connectionListener() {
     final provider = context.read<ConnectivityProvider>();
-    bool isNowConnected = provider.isConnected;
-
-    if (_laskKnownConnectionState && !isNowConnected) {
-      // transition connected to disconnected
+    final isNowConnected = provider.isConnected;
+    if (!mounted) return;
+    if (_lastKnownConnectionState && !isNowConnected) {
       SnackBarHelper.showError(context, "No internet");
-    } else if (!_laskKnownConnectionState && isNowConnected) {
-      // transition connected to disconnected
+    } else if (!_lastKnownConnectionState && isNowConnected) {
       SnackBarHelper.showSuccess(context, "Internet connected");
     }
 
-    // update the local state tracker
-    _laskKnownConnectionState = isNowConnected;
+    _lastKnownConnectionState = isNowConnected;
+  }
+
+  // Login function
+  void _login() async {
+    final authProvider = context.read<AuthProvider>();
+
+    await authProvider.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    // Show error if login failed
+    if (authProvider.errorMessage != null) {
+      SnackBarHelper.showError(context, authProvider.errorMessage!);
+      return;
+    }
+    if (!mounted) return;
+    SnackBarHelper.showSuccess(context, "Successfully logged in");
+
+    // ✅ Email-based admin redirect
+    final email = _emailController.text.trim().toLowerCase();
+    if (email == "aboutadvertisementinc@gmail.com") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => AdminDashboardPage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginPage()),
+      );
+    }
   }
 
   @override
   void dispose() {
+    // Remove connectivity listener
+    context.read<ConnectivityProvider>().removeListener(_connectionListener);
+
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -73,157 +107,129 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = ResponsiveHelper.isTablet(context);
+
     return ChangeNotifierProvider(
-      create: (context) => PasswordToggleProvider(),
+      create: (_) => PasswordToggleProvider(),
       child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            // determine layout based on screen size
-            final isMobile = ResponsiveHelper.isMobile(context);
-            final isTablet = ResponsiveHelper.isTablet(context);
-            return Center(
-              child: ConstrainedBox(
-                // limit max width for tablets
-                constraints: BoxConstraints(
-                  maxWidth: isTablet ? 600 : double.infinity,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: ResponsiveDimensions.paddingSymmetricAdaptive(
-                      context,
-                      mobileHorizontal: 24,
-                      tabletHorizontal: 48,
-                      mobileVertical: 16,
-                      tabletVertical: 24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: .start,
-                      spacing: context.sp16,
-                      mainAxisAlignment: .center,
-                      children: [
-                        // welcome
-                        Center(
-                          child: WelcomeMessage(
-                            title: AppStrings.welcomeBack,
-                            subtitle: AppStrings.signInSubtitle,
-                          ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isTablet ? 600 : double.infinity,
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: ResponsiveDimensions.paddingSymmetricAdaptive(
+                    context,
+                    mobileHorizontal: 24,
+                    tabletHorizontal: 48,
+                    mobileVertical: 16,
+                    tabletVertical: 24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: WelcomeMessage(
+                          title: AppStrings.welcomeBack,
+                          subtitle: AppStrings.signInSubtitle,
                         ),
-                        // email input
-                        CustomLabelTextField(
-                          labelText: AppStrings.emailLabel,
-                          customTextField: CustomTextField(
-                            controller: _emailController,
-                            keyboardType: .emailAddress,
-                            prefixIcon: Icon(Icons.email, size: context.sp16),
-                            hintText: AppStrings.emailHint,
-                            validator: (value) =>
-                                FormValidators.validateEmail(value),
-                          ),
-                        ),
+                      ),
+                      SizedBox(height: context.sp16),
 
-                        // password input
-                        CustomLabelTextField(
-                          labelText: AppStrings.passwordLabel,
-                          customTextField:
-                              Selector<PasswordToggleProvider, bool>(
-                                selector: (_, value) => value.isPassVisibile,
-                                builder: (context, value, child) =>
-                                    CustomTextField(
-                                      controller: _passwordController,
-                                      keyboardType: .visiblePassword,
-                                      obscureText: value,
-                                      suffixIcon: IconButton(
-                                        onPressed: () {
-                                          context
-                                              .read<PasswordToggleProvider>()
-                                              .togglePasswordVisibility();
-                                        },
-                                        icon: Icon(
-                                          value
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          size: context.sp16,
-                                        ),
-                                      ),
-                                      hintText: AppStrings.passwordHint,
-                                      validator: (value) =>
-                                          FormValidators.validatePassword(
-                                            value,
-                                          ),
-                                    ),
-                              ),
+                      // Email input
+                      CustomLabelTextField(
+                        labelText: AppStrings.emailLabel,
+                        customTextField: CustomTextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icon(Icons.email, size: context.sp16),
+                          hintText: AppStrings.emailHint,
+                          validator: FormValidators.validateEmail,
                         ),
+                      ),
+                      SizedBox(height: context.sp16),
 
-                        // forgot password
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ForgotPasswordPage(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            AppStrings.forgotPassword,
-                            style: AppTextStyle.bodyMedium(
-                              context,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
-                        ),
-
-                        // login button
-                        Consumer<AuthProvider>(
-                          builder: (context, provider, child) => CustomButton(
-                            onTap: () async {
-                              await context.read<AuthProvider>().login(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
-                              );
-                              if (context.mounted &&
-                                  provider.errorMessage == null) {
-                                SnackBarHelper.showSuccess(
-                                  context,
-                                  "Successfully logged in",
-                                );
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TabPage(),
+                      // Password input
+                      CustomLabelTextField(
+                        labelText: AppStrings.passwordLabel,
+                        customTextField: Selector<PasswordToggleProvider, bool>(
+                          selector: (_, value) => value.isPassVisibile,
+                          builder: (context, isHidden, child) =>
+                              CustomTextField(
+                                controller: _passwordController,
+                                keyboardType: TextInputType.visiblePassword,
+                                obscureText: isHidden,
+                                suffixIcon: IconButton(
+                                  onPressed: () => context
+                                      .read<PasswordToggleProvider>()
+                                      .togglePasswordVisibility(),
+                                  icon: Icon(
+                                    isHidden
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: context.sp16,
                                   ),
-                                );
-                              }
-                            },
-                            buttonLabel: AppStrings.loginBtn,
-                            isLoading: provider.isLoading,
+                                ),
+                                hintText: AppStrings.passwordHint,
+                                validator: FormValidators.validatePassword,
+                              ),
+                        ),
+                      ),
+                      SizedBox(height: context.sp16),
+
+                      // Forgot password
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ForgotPasswordPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          AppStrings.forgotPassword,
+                          style: AppTextStyle.bodyMedium(
+                            context,
+                            color: AppColors.primaryBlue,
                           ),
                         ),
+                      ),
+                      SizedBox(height: context.sp16),
 
-                        // redirect section
-                        RedirectSection(
-                          infoText: AppStrings.dontHaveAccount,
-                          redirectLinkText: AppStrings.signUpBtn,
-                          navigateTo: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SignUpPage(),
-                              ),
-                            );
-                          },
+                      // Login button
+                      Consumer<AuthProvider>(
+                        builder: (context, provider, child) => CustomButton(
+                          onTap: provider.isLoading ? null : _login,
+                          buttonLabel: AppStrings.loginBtn,
+                          isLoading: provider.isLoading,
                         ),
-                        SizedBox(height: context.sp20),
+                      ),
+                      SizedBox(height: context.sp16),
 
-                        // bottom info section
-                        BottomInfoSection(),
-                      ],
-                    ),
+                      // Redirect section
+                      RedirectSection(
+                        infoText: AppStrings.dontHaveAccount,
+                        redirectLinkText: AppStrings.signUpBtn,
+                        navigateTo: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => SignUpPage()),
+                          );
+                        },
+                      ),
+                      SizedBox(height: context.sp20),
+
+                      // Bottom info section
+                      BottomInfoSection(),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

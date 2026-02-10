@@ -74,7 +74,7 @@ class PatientCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PatientDetailPage(patient: patient),
+                      builder: (context) => RecordDetailsPage(),
                     ),
                   );
                 },

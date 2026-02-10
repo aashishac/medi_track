@@ -32,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = ResponsiveHelper.isMobile(context);
+    //final isMobile = ResponsiveHelper.isMobile(context);
 
     final maxWidth = ResponsiveHelper.getResponsiveValue<double>(
       context: context,

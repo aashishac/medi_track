@@ -21,6 +21,7 @@ class CompleteProfilePage extends StatefulWidget {
 class _CompleteProfilePageState extends State<CompleteProfilePage> {
   final _departmentController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _nameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   @override
   void dispose() {
@@ -35,6 +36,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
       await provider.completeDoctorProfile(
         Doctor(
           doctorId: "",
+          doctorname: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
           department: _departmentController.text.trim(),
         ),
@@ -82,6 +84,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                     shape: .circle,
                   ),
                   child: Icon(Icons.person),
+                ),
+                CustomLabelTextField(
+                  labelText: "Name",
+                  customTextField: CustomTextField(
+                    controller: _nameController,
+                    hintText: "Enter your name",
+                  ),
                 ),
 
                 CustomLabelTextField(
